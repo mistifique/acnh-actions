@@ -6,3 +6,4 @@ server/token.txt
 server/*.log
 server/receiver.pid
 watch_run.sh
+server/pass.txt
