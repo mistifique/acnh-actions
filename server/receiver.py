@@ -93,12 +93,14 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == '/finish':
             OUT.mkdir(exist_ok=True)
             reply = []
-            for group, filename in (('ipa', 'ACNH.ipa.enc'), ('romfs', 'RomFS.img.enc')):
+            for group, filename in (('ipa', 'ACNH-full.ipa.enc'), ('romfs', 'RomFS.img.enc')):
                 # El workflow envia chunks como ipa_* y romfs_* (no part_*).
                 files = sorted((PARTS / group).glob(f'{group}_*'))
                 if not files:
-                    self._send(400, f'no chunks for {group}\n'.encode())
-                    return
+                    if group == 'ipa':
+                        self._send(400, b'no chunks for ipa\n')
+                        return
+                    continue  # el build con --romfs bundle no envia RomFS aparte
                 digest = hashlib.sha256()
                 target = OUT / filename
                 with target.open('wb') as out:

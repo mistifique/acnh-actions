@@ -67,29 +67,21 @@ jobs:
           NSP=$(find "$HOME/dump" -type f \( -iname '*.nsp' -o -iname '*.nsz' -o -iname '*.xci' \) | head -1)
           D=$(dirname "$NSP")
           mkdir -p "$HOME/out"
-          python3 "$HOME/nxnative/scripts/build_ipa_from_nsp.py" "$D" -k "$HOME/prod.keys" --romfs separate -o "$HOME/out/ACNH.ipa" --progress lines
-          ls -lh "$HOME/out/ACNH.ipa"
+          python3 "$HOME/nxnative/scripts/build_ipa_from_nsp.py" "$D" -k "$HOME/prod.keys" -o "$HOME/out/ACNH-full.ipa" --progress lines
+          ls -lh "$HOME/out/ACNH-full.ipa"
+          df -h /System/Volumes/Data
 
       - name: Cifrar y devolver por chunks (sin artefactos de GitHub)
         run: |
           cd "$HOME/out"
-          IMG=$(find "$HOME/dump" -type f -name 'RomFS.img' | head -1)
-          test -n "$IMG"
-          echo "RomFS: $IMG"
+          test -s ACNH-full.ipa
           mkdir -p chunks
-          # Ciframos en streaming para no duplicar ficheros gigantes en el disco del runner.
-          openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:PASS -in ACNH.ipa | split -b 64m - chunks/ipa_
-          openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:PASS -in "$IMG" | split -b 64m - chunks/romfs_
+          # Un solo IPA con el juego dentro: ciframos en streaming para no duplicar el fichero.
+          openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:PASS -in ACNH-full.ipa | split -b 64m - chunks/ipa_
           for f in chunks/ipa_*; do
             n=$(basename "$f")
             curl -fsS --retry 5 --retry-delay 5 \
               -H "X-Token: $TOKEN" -H "X-Chunk: ipa/$n" \
-              --data-binary @"$f" "$UPLOAD_URL/chunk" -o /dev/null
-          done
-          for f in chunks/romfs_*; do
-            n=$(basename "$f")
-            curl -fsS --retry 5 --retry-delay 5 \
-              -H "X-Token: $TOKEN" -H "X-Chunk: romfs/$n" \
               --data-binary @"$f" "$UPLOAD_URL/chunk" -o /dev/null
           done
           curl -fsS --retry 3 -X POST -H "X-Token: $TOKEN" "$UPLOAD_URL/finish"
