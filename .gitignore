@@ -1,0 +1,7 @@
+server/dump.tar
+server/parts/
+server/out/
+server/ACNH.ipa.enc
+server/token.txt
+server/*.log
+server/receiver.pid
