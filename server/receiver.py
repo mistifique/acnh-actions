@@ -94,7 +94,8 @@ class Handler(BaseHTTPRequestHandler):
             OUT.mkdir(exist_ok=True)
             reply = []
             for group, filename in (('ipa', 'ACNH.ipa.enc'), ('romfs', 'RomFS.img.enc')):
-                files = sorted((PARTS / group).glob('part_*'))
+                # El workflow envia chunks como ipa_* y romfs_* (no part_*).
+                files = sorted((PARTS / group).glob(f'{group}_*'))
                 if not files:
                     self._send(400, f'no chunks for {group}\n'.encode())
                     return

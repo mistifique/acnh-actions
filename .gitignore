@@ -5,3 +5,4 @@ server/ACNH.ipa.enc
 server/token.txt
 server/*.log
 server/receiver.pid
+watch_run.sh
